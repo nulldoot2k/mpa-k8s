@@ -1,2 +1,7 @@
 resources:
 - manager.yaml
+
+images:
+- name: controller
+  newName: vumanhdat2k/mpa-k8s
+  newTag: v0.1.0
