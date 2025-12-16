@@ -215,6 +215,20 @@ Apply manifest
 kubectl apply -f config/default
 ```
 
+Or
+```
+https://raw.githubusercontent.com/nulldoot2k/mpa-k8s/v0.1.0/dist/v0.1.0/install.yaml
+```
+
+### Test
+
+Create manifest
+
+```
+kubectl create namespace xnxx
+kubectl apply -f nginx-deploy.yaml
+```
+
 ---
 
 ## Roadmap

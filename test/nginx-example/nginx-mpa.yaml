@@ -1,0 +1,34 @@
+apiVersion: autoscaling.hacker-mpa.io/v1alpha1
+kind: MultidimensionalPodAutoscaler
+metadata:
+  name: nginx-demo-mpa
+  namespace: xnxx
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-demo
+
+  horizontal:
+    minReplicas: 2
+    maxReplicas: 10
+    metrics:
+      cpu:
+        targetUtilization: 70
+      memory:
+        targetUtilization: 75
+
+  vertical:
+    enabled: true
+    updatePolicy: Auto        # Auto | Initial | Off
+    resources:
+      cpu:
+        min: 200m
+        max: 2000m
+      memory:
+        min: 256Mi
+        max: 2Gi
+
+  behavior:
+    scalePriority: VerticalFirst   # VerticalFirst | HorizontalFirst
+    cooldownSeconds: 300
