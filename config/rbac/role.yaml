@@ -1,0 +1,40 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - autoscaling.hacker-mpa.io
+  resources:
+  - multidimensionalpodautoscalers
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - autoscaling.hacker-mpa.io
+  resources:
+  - multidimensionalpodautoscalers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - autoscaling.hacker-mpa.io
+  resources:
+  - multidimensionalpodautoscalers/status
+  verbs:
+  - get
+  - patch
+  - update

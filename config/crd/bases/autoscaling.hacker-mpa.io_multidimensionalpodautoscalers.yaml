@@ -1,0 +1,92 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
+  name: multidimensionalpodautoscalers.autoscaling.hacker-mpa.io
+spec:
+  group: autoscaling.hacker-mpa.io
+  names:
+    kind: MultidimensionalPodAutoscaler
+    listKind: MultidimensionalPodAutoscalerList
+    plural: multidimensionalpodautoscalers
+    singular: multidimensionalpodautoscaler
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: MultidimensionalPodAutoscaler is the Schema for the multidimensionalpodautoscalers
+          API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: MultidimensionalPodAutoscalerSpec defines the desired state
+              of MultidimensionalPodAutoscaler
+            properties:
+              horizontal:
+                properties:
+                  maxReplicas:
+                    format: int32
+                    type: integer
+                  minReplicas:
+                    format: int32
+                    type: integer
+                  targetCPU:
+                    format: int32
+                    type: integer
+                required:
+                - maxReplicas
+                - minReplicas
+                - targetCPU
+                type: object
+              targetRef:
+                properties:
+                  apiVersion:
+                    type: string
+                  kind:
+                    type: string
+                  name:
+                    type: string
+                required:
+                - apiVersion
+                - kind
+                - name
+                type: object
+            required:
+            - horizontal
+            - targetRef
+            type: object
+          status:
+            description: MultidimensionalPodAutoscalerStatus defines the observed
+              state of MultidimensionalPodAutoscaler
+            properties:
+              currentReplicas:
+                format: int32
+                type: integer
+              lastScaleTime:
+                format: date-time
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
