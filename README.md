@@ -1,245 +1,100 @@
-# MPA-K8s (Multidimensional Pod Autoscaler)
+# mpa-k8s
+// TODO(user): Add simple overview of use/purpose
 
-MPA-K8s is a Kubernetes controller that provides **multidimensional autoscaling**
-by managing application scaling through a **single control loop**.
+## Description
+// TODO(user): An in-depth paragraph about your project and overview of use
 
-It is inspired by Google’s Multidimensional Pod Autoscaler (MPA), but implemented
-as a **Kubernetes-native controller** using Custom Resources.
-
-> 🚧 **Status**: MVP / Developer Preview (v0.1)
-
----
-
-## Why MPA?
-
-Kubernetes currently provides:
-
-* **HPA** – Horizontal scaling only (replicas)
-* **VPA** – Vertical scaling only (CPU / memory requests)
-
-MPA introduces a **single autoscaling brain** that can:
-
-* Decide *when to scale vertically*
-* Decide *when to scale horizontally*
-* Avoid conflicts between multiple autoscalers
-
----
-
-## Features (v0.1)
-
-* Custom Resource Definition: `MultidimensionalPodAutoscaler`
-* Kubernetes controller-based architecture
-* Horizontal scaling (replicas) management
-* No HPA or VPA required
-* Kubernetes-native (no admission webhook)
-
----
-
-## Architecture Overview
-
-```
-User YAML (MPA)
-      |
-      v
-+--------------------------+
-|   MPA Controller Pod     |
-|--------------------------|
-| - Watches MPA resources  |
-| - Patches Deployments    |
-+--------------------------+
-```
-
-MPA is installed **once per cluster**, then applied **per workload**.
-
----
-
-## Installation (Users)
-
-> This section is for **platform teams / cluster administrators**.
+## Getting Started
 
 ### Prerequisites
+- go version v1.21.0+
+- docker version 17.03+.
+- kubectl version v1.11.3+.
+- Access to a Kubernetes v1.11.3+ cluster.
 
-* Kubernetes cluster
-* `kubectl` configured (`KUBECONFIG` set)
-
-### Install MPA into the cluster
-
-Install MPA **once per cluster**:
-
-```sh
-kubectl apply -k github.com/nulldoot2k/mpa-k8s/config/default?ref=v0.1.0
-```
-
-This will:
-
-* Install the MPA CRD
-* Deploy the MPA controller
-* Configure required RBAC
-
-### Verify installation
+### To Deploy on the cluster
+**Build and push your image to the location specified by `IMG`:**
 
 ```sh
-kubectl get crd | grep multidimensional
-kubectl get pods -n mpa-k8s-system
+make docker-build docker-push IMG=<some-registry>/mpa-k8s:tag
 ```
 
-You should see the MPA controller pod in `Running` state.
+**NOTE:** This image ought to be published in the personal registry you specified.
+And it is required to have access to pull the image from the working environment.
+Make sure you have the proper permission to the registry if the above commands don’t work.
 
----
-
-## Usage (Users)
-
-Apply a `MultidimensionalPodAutoscaler` resource to your workload.
-
-### Example: `mpa.yaml`
-
-```yaml
-apiVersion: autoscaling.hacker-mpa.io/v1alpha1
-kind: MultidimensionalPodAutoscaler
-metadata:
-  name: example-mpa
-  namespace: default
-spec:
-  targetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: example-app
-
-  horizontal:
-    minReplicas: 2
-    maxReplicas: 5
-    targetCPU: 60
-```
-
-Apply it:
+**Install the CRDs into the cluster:**
 
 ```sh
-kubectl apply -f mpa.yaml
+make install
 ```
 
-From this point, the MPA controller will manage the target Deployment automatically.
-
----
-
-## How it works (High-level)
-
-1. MPA controller watches `MultidimensionalPodAutoscaler` resources
-2. For each MPA:
-
-   * Reads the target workload (Deployment)
-   * Evaluates scaling rules
-   * Patches the Deployment if scaling is required
-3. Status is updated on the MPA resource
-
----
-
-## Development (Contributors)
-
-> This section is for developers who want to modify or extend MPA.
-
-### Prerequisites
-
-* Go **1.21.x**
-* kubebuilder **v3.14.x**
-* Docker
-
-### Clone the repository
+**Deploy the Manager to the cluster with the image specified by `IMG`:**
 
 ```sh
-git clone https://github.com/nulldoot2k/mpa-k8s.git
-cd mpa-k8s
+make deploy IMG=<some-registry>/mpa-k8s:tag
 ```
 
-### Development workflow
+> **NOTE**: If you encounter RBAC errors, you may need to grant yourself cluster-admin
+privileges or be logged in as admin.
 
-If you modify CRD types or RBAC annotations:
+**Create instances of your solution**
+You can apply the samples (examples) from the config/sample:
 
 ```sh
-make generate
-make manifests
+kubectl apply -k config/samples/
 ```
 
-Run unit tests (no Kubernetes cluster required):
+>**NOTE**: Ensure that the samples has default values to test it out.
+
+### To Uninstall
+**Delete the instances (CRs) from the cluster:**
 
 ```sh
-go test ./api/... ./cmd/... ./test/utils/...
+kubectl delete -k config/samples/
 ```
 
-> Note: Controller integration tests using envtest are optional and not required
-> for MVP development.
+**Delete the APIs(CRDs) from the cluster:**
 
-## Install Minikube
-
-```
-curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-chmod +x ./minikube
-sudo mv ./minikube /usr/local/bin/
-
-minikube config set driver docker
-minikube start
-kubectl config use-context minikube
+```sh
+make uninstall
 ```
 
-## Install Kubectl
+**UnDeploy the controller from the cluster:**
 
-```
-curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-chmod +x ./kubectl
-sudo mv ./kubectl /usr/local/bin/
+```sh
+make undeploy
 ```
 
-BUILD IMAGE MPA CHO MINIKUBE
-```
-make docker-build IMG=vumanhdat2k/mpa-k8s:v0.1.0
-```
+## Project Distribution
 
-PUSH IMAGE MPA CHO MINIKUBE
+Following are the steps to build the installer and distribute this project to users.
 
-```
-make docker-push IMG=vumanhdat2k/mpa-k8s:v0.1.0
-```
+1. Build the installer for the image built and published in the registry:
 
-Modify config/manager/kustomization.yaml
-```
-resources:
-- manager.yaml
-
-images:
-- name: controller
-  newName: vumanhdat2k/mpa-k8s
-  newTag: v0.1.0
+```sh
+make build-installer IMG=<some-registry>/mpa-k8s:tag
 ```
 
-Apply manifest
-```
-kubectl apply -f config/default
-```
+NOTE: The makefile target mentioned above generates an 'install.yaml'
+file in the dist directory. This file contains all the resources built
+with Kustomize, which are necessary to install this project without
+its dependencies.
 
-Or
-```
-https://raw.githubusercontent.com/nulldoot2k/mpa-k8s/v0.1.0/dist/v0.1.0/install.yaml
-```
+2. Using the installer
 
-### Test
+Users can just run kubectl apply -f <URL for YAML BUNDLE> to install the project, i.e.:
 
-Create manifest
-
-```
-kubectl create namespace xnxx
-kubectl apply -f nginx-deploy.yaml
+```sh
+kubectl apply -f https://raw.githubusercontent.com/<org>/mpa-k8s/<tag or branch>/dist/install.yaml
 ```
 
----
+## Contributing
+// TODO(user): Add detailed information on how you would like others to contribute to this project
 
-## Roadmap
+**NOTE:** Run `make help` for more information on all potential `make` targets
 
-* CPU-based autoscaling using metrics-server
-* Vertical scaling (CPU / memory requests)
-* Cooldown and anti-thrashing logic
-* Decision engine (vertical-first vs horizontal-first)
-* Helm chart support
-
----
+More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
 
 ## License
 
@@ -247,6 +102,13 @@ Copyright 2025.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
-You may obtain a copy of the License at:
+You may obtain a copy of the License at
 
-[http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
